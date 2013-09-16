@@ -18,11 +18,11 @@ node_exec = function(robj, node, exist, executors, state)
     }  else  {
         if(identical(node, "*"))
         {
-            found = seq(along = names(robj))
+            found = seq(along = state$names_fun(robj))
             if(exist)
                 ret = TRUE
             else
-                ret = as.list(robj)
+                ret = lapply(robj, function(x) x)
           #  arr = list()
           #  for(key in names(robj))
           #      arr = c(arr, robj[[key]])
@@ -30,12 +30,17 @@ node_exec = function(robj, node, exist, executors, state)
           #      ret = length(arr)
           #  else
           #      ret = arr
-        } else if (node %in% names(robj)) {
-                        
+        } else if (node %in% state$names_fun(robj)) {
+
+            found = which(node == state$names_fun(robj))
             if(exist)
                 ret = TRUE
             else
-                ret = robj[[node]]
+            {
+                ret = robj[found]
+                if(length(found) == 1)
+                    ret = ret[[1]]
+            }
            # val = robj[[node]]
            # if(exist)
            #     ret = if(is.list(val)) length(val) else val
@@ -306,11 +311,13 @@ rpath_split = function(path, parsers = makeParsers(state = state), state)
 }
 
 
+getClassesVec = function(obj) sapply(obj, function(x) class(x)[1])
 
-rpath = function(robj, path, state = new.env())
+rpath = function(robj, path, state = new.env(), use_classes = FALSE, names_fun = if(use_classes) getClassesVec else names)
 {
     state$lastSteps = list()
     state$result = list()
+    state$names_fun = names_fun
     if(is.null(robj) || !is(path, "character") || !nchar(path))
         return(list())
 

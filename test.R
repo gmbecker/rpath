@@ -6,6 +6,10 @@ rpath(lst, "/.third")
 
 rpath(lst, "/.third.fourth")
 
-rpath(lst, "/.*[.fourth]")
+rpath(lst, "/.*[.fourth]") #doesn't work!!!
 rpath(lst, "/.third.*")
 rpath(lst, "/.third[.fourth]")
+
+rpath(lst, "/.logical", use_classes = TRUE)
+rpath(lst, "/.list", use_classes = TRUE)
+rpath(lst, "/.list.character", use_classes = TRUE)
