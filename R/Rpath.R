@@ -2,24 +2,14 @@ node_exec = function(robj, node, exist, executors, state)
 {
     node = unlist(node, recursive = FALSE)
     if(is.character(node) && identical(node, ""))
-        return(robj)
+        if(!exist)
+            return(robj)
+        else
+            return(TRUE)
 
     len = length(robj)
-    if(len > 1)
-    {
-        arr = list()
-        for(i in seq(1, len))
-        {
-#            res = rpath_exec(robj[[i]], c("node", node), exist, executors = executors, state = state);
-                        res = rpath_exec(robj[i], c("node", node), exist, executors = executors, state = state);
-            if(!is.null(res))
-                arr = c(arr, res)
-        }
-        if(exist)
-            ret = length(arr)
-        else
-            ret = arr
-    } else if (is.list(node) && length(node) > 1) {
+    if (is.list(node) && length(node) > 1) {
+        #XXX when does this code ever get invoked???
         res = robj
         for(i in seq(1, length(node), by=2)) {
             res = rpath_exec(res, node[i + 0:1], exist, executors = executors, state = state)
@@ -28,21 +18,34 @@ node_exec = function(robj, node, exist, executors, state)
     }  else  {
         if(identical(node, "*"))
         {
-            arr = list()
-            for(key in names(robj))
-                arr = c(arr, robj[[key]])
+            found = seq(along = names(robj))
             if(exist)
-                ret = length(arr)
+                ret = TRUE
             else
-                ret = arr
+                ret = as.list(robj)
+          #  arr = list()
+          #  for(key in names(robj))
+          #      arr = c(arr, robj[[key]])
+          #  if(exist)
+          #      ret = length(arr)
+          #  else
+          #      ret = arr
         } else if (node %in% names(robj)) {
-            val = robj[[node]]
+                        
             if(exist)
-                ret = if(is.list(val)) length(val) else val
+                ret = TRUE
             else
                 ret = robj[[node]]
+           # val = robj[[node]]
+           # if(exist)
+           #     ret = if(is.list(val)) length(val) else val
+           # else
+           #     ret = robj[[node]]
         } else {
-            ret = NULL
+            if(exist)
+                ret = FALSE
+            else
+                ret = NULL
         }
     }
     ret
@@ -110,35 +113,40 @@ rpath_compare = function(lNode, rNode)
 
 rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
 {
+    if(exist)
+        res = FALSE
+    else
+        res = NULL
+
     if(step[[1]] == "predicate") {
         if (is.vector(robj) && length(robj) > 1 && step[[2]][[1]] != 'index') {
-            arr = list();
-            
-            for (i in seq(along = robj))
-            {
-                #res = rpath_exec(robj[[i]], exist = exist, step = step ,executors = executors, state = state);
+            found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
+#            found =  sapply(robj, rpath_exec, exist = TRUE, step = step[[2]], executors = executors, state = state )
+        #    for (i in seq(along = robj))
+        #    {
                 #trying to get individual sections to retain names for indexing ith [] instead of [[]]
-                res = rpath_exec(robj[i], exist = exist, step = step ,executors = executors, state = state);
-                if (!is.null(res))
-                    arr = c(arr, res)
-            }
-            return(arr);
+                #exist=TRUE is hardcoded, we are checking for the predicate condition
+         #       found = rpath_exec(robj[i], exist = TRUE, step = step[[2]] ,executors = executors, state = state);
+               # if (!is.null(res))
+               #     arr = c(arr, res)
+          #  }
+            if(exist)
+                res = any(found)
+            #if its a predicate, the matching element is robj (or no match)
+            else if(found)
+                res = robj
         } else {
+            #exist=TRUE is hardcoded, we are checking for the predicate condition
             res = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)
-            if(is.logical(res))
-            {
-                if(!res)
-                    res = NULL
-                else
-                    res = robj
-            } 
-            return(res)
+            #if its a predicate, the matching element is robj (or no matc)h
+            if(!exist && res)
+                res = robj
         }
     } else {
 #        return(executors[[ step[[ 1 ]] ]](robj, step[[1]], exist, executors = executors, state = state))
-                return(executors[[ step[[ 1 ]] ]](robj, step[-1], exist, executors = executors, state = state))
+                res = executors[[ step[[ 1 ]] ]](robj, step[-1], exist = exist, executors = executors, state = state)
     }
-    NULL
+    res
 }
 
 
@@ -153,25 +161,29 @@ makeParsers = function(state, ...)
     
     
     parsers <- list(
-        '"([^"]*?)"' = function(match, index, state)
+        '"([^"]*?)"' = function(match, index = length(state$result) + 1, state)
     {
-        state$result[[index]] <- list("string", match)
+#        state$result[[index]] <- list("string", match)
+        list("string", match)
     },
-        '(\\.[^=[:space:]!]*)' = function(match, index, state)
+        '(\\.[^=[:space:]!]*)' = function(match, index = length(state$result) + 1, state)
     {
         if (match == ".")
             match = ""
         else
         {
-            match = rpath_split(match, state = state)
+#            match = rpath_split(match, state = state)
+            match = rpath_split(match, state = new.env())
             if(length(match) == 2)
-                match = match[[1]]
+                match = match[[2]]
         }
-        state$result[[index]] <- c("node", match);
+        #state$result[[index]] <- c("node", match);
+        list("node", match)
     },
         '(==|!=|!|\\|\\||&&)' = function(match, index = length(result) + 1, state)
     {
-        state$result[[index]] <- list("operator", match)
+#        state$result[[index]] <- list("operator", match)
+        list("operator", match)
     }
         )
     args = list(...)
@@ -179,9 +191,9 @@ makeParsers = function(state, ...)
     parsers
 }
 
-parse = function(predicate, parsers = makeParsers(state = state), state)
+rpath_parse = function(predicate, parsers = makeParsers(state = state), state)
 {
-    state$result <- list()
+#    state$result <- list()
     for( i in seq(1, length(parsers)))
     {
         #find out what the js replace method on arrays does
@@ -190,12 +202,16 @@ parse = function(predicate, parsers = makeParsers(state = state), state)
         tmpmatch = gregexpr(expr, predicate, perl=TRUE)[[1]]
         if(any(tmpmatch > 0))
         {
-            matches = regmatches(tmpmatch, predicate)
-            res = sapply(matches, parsers[[i]])
-            regmatches(matches, predicate) <- res
+            matches = regmatches(predicate, tmpmatch)
+            res = sapply(matches, parsers[[i]], state = state)
+            gsub(expr, "", predicate, perl=TRUE)
+#            regmatches(predicate, matches) <- ""
         }
     }
-        
+
+    #get rid of annoying
+#    predicate = gsub("^\\.([^\\[\\(/]+)$", "\\1", predicate) 
+    predicate = rpath_split(predicate, parsers, new.env())
     state$lastSteps <- c(state$lastSteps, predicate)
 
    # return(state$result)
@@ -253,7 +269,6 @@ rpath_split = function(path, parsers = makeParsers(state = state), state)
 {
     
     
-    step = tokens =  NULL
 
     #<string>.split
     steps = strsplit(path, split = split_regex, perl=TRUE)[[1]]
@@ -265,27 +280,25 @@ rpath_split = function(path, parsers = makeParsers(state = state), state)
 
     for(st in steps)
     {
-        tmpmatchRes = gregexpr(predicate_regex, st)[[1]]
-        matchRes = regmatches(st, tmpmatchRes)
+
+        predmatch = matchPredicate(st)
         
-        if(length(matchRes)) {
+        if(!is.null(predmatch)) {
          #   predicate = matchRes[[2]]
-            predicate = matchRes[[1]]
-            mIndex = regmatches(predicate, gregexpr(index_regex, predicate))[[1]]
-            if(length(mIndex))
-                tokens = list("index", mIndex[[1]])
+            if(grepl(index_regex, predmatch[3]))
+                tokens = list("index", as.numeric(predmatch[[3]]))
             else {
-                tokens = parse(predicate, parsers = parsers, state = state)
+                tokens = rpath_parse(predmatch[[3]], parsers = parsers, state = state)
                 tokens = flatten(compact(tokens))
                 tokens = regroup(tokens)
             }
 
-            if(length(matchRes) > 1 && nchar(matchRes[[2]])) {
-                state$result <- c(state$result, "node", matchRes[[1]])
+            if(nchar(predmatch[2])) {
+                state$result <- c(state$result, list(list("node", predmatch[2])))
             }
-            state$result <- c(state$result, "predicate", tokens)
+            state$result <- c(state$result, list(list("predicate", tokens)))
         } else {
-            state$result <- c(state$result, "node", st)
+            state$result <- c(state$result, list(list("node", st)))
         }
     }
     
@@ -307,13 +320,16 @@ rpath = function(robj, path, state = new.env())
     #steps = unlist(rpath_split(path, state =  state))
     steps = rpath_split(path, state =  state)
          
-    res = rpath_exec(robj, steps[1:2], executors = executors, state = state)
-
-    i = 3
-    while(!is.null(res) && i < length(steps))
+    #res = rpath_exec(robj, steps[1:2], executors = executors, state = state)
+    res = rpath_exec(robj, steps[[1]], executors = executors, state = state)
+    #i = 3
+    i = 2
+    while(!is.null(res) && i <= length(steps))
     {
-        res = rpath_exec(res, steps[i + 0:1], executors = executors, state = state)
-        i = i+2
+       # res = rpath_exec(res, steps[i + 0:1], executors = executors, state = state)
+        res = rpath_exec(res, steps[[i]], executors = executors, state = state)
+        #i = i+2
+        i = i + 1
     }
     if(is.null(res))
         list()
@@ -321,4 +337,36 @@ rpath = function(robj, path, state = new.env())
  #       list(res)
     else
         res
+}
+
+
+#can't get predicate_regex to match all 3 parts (ie "c[.e]"-> 'c[.e]', c, .e) so this is a hack that seems to work
+
+matchPredicate = function(path)
+{
+    match = grepl(predicate_regex, path, perl=TRUE)
+    
+    if(!match)
+        return(NULL)
+
+    res = strsplit(path, "(\\[|\\])")[[1]]
+
+    c(path, res)
+}
+
+
+doPredicate = function(path)
+{
+    predmatch = matchPredicate(path)
+
+    if(is.null(predmatch))
+        return(NULL)
+
+    if(grepl(index_regex, predmatch[3]))
+        parsedPred = list("index", as.numeric(predmatch[3]))
+    else
+       # parsedPred = rpath_parse(path)
+        parsedPred = rpath_split(path, state = new.env())
+
+    list(list("node", predmatch[2]), parsedPred)
 }
