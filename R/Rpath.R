@@ -56,24 +56,35 @@ node_exec = function(robj, node, exist, executors, state)
     ret
 }
 
-index_exec = function(robj, index, executors, state)
+
+index_exec = function(robj, index, executors, state, exist = FALSE)
 {
-    if(index <= length(robj))
-        robj[[index]]
+    if(!is(index, "numeric"))
+       index =  as.numeric(index)
+    if(exist)
+        ret = FALSE
     else
-        NULL
+        ret = NULL
+    if(index <= length(robj))
+    {
+        if(exist)
+            ret = index
+        else
+          ret=  robj[[index]]
+    }
+    ret
 }
        
     
 executors <- list( 
     node = node_exec,
     index =  index_exec,
-    not = function(robj, operand, executors, state) rpath_exec(robj, operand, TRUE, executors = executors, state = state),
-    eq = function(robj, operands,executors,  state) rpath_compare(robj, operands[[1]], operands[[2]]),
-    noteq = function(robj, operands, executors, state) !rpath_compare(robj, operands[[1]], operands[[2]]),
-    or = function(robj, operands, executors, state) rpath_exec(robj, operands[[1]], TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], TRUE, executors = executors, state = state),
-    and = function(robj, operands, executors, state) rpath_exec(robj, operands[[1]], TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], TRUE, executors = executors, state = state),
-    string = function(robj, string, executors, state) string
+    not = function(robj, operand, executors, state, exist) rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
+    eq = function(robj, operands, executors, state, exist) rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
+    noteq = function(robj, operands, executors, state, exist) !rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
+    or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], exist = TRUE, executors = executors, state = state),
+    and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], exist =  TRUE, executors = executors, state = state),
+    string = function(robj, string, executors, state, exist) string
     )
 
 
@@ -124,22 +135,21 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
         res = NULL
 
     if(step[[1]] == "predicate") {
-        if (is.vector(robj) && length(robj) > 1 && step[[2]][[1]] != 'index') {
+        pred_type = step[[2]][[1]]
+        if (is.vector(robj) && length(robj) > 1 && pred_type!= 'index') {
             found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
-#            found =  sapply(robj, rpath_exec, exist = TRUE, step = step[[2]], executors = executors, state = state )
-        #    for (i in seq(along = robj))
-        #    {
-                #trying to get individual sections to retain names for indexing ith [] instead of [[]]
-                #exist=TRUE is hardcoded, we are checking for the predicate condition
-         #       found = rpath_exec(robj[i], exist = TRUE, step = step[[2]] ,executors = executors, state = state);
-               # if (!is.null(res))
-               #     arr = c(arr, res)
-          #  }
             if(exist)
                 res = any(found)
             #if its a predicate, the matching element is robj (or no match)
             else if(found)
                 res = robj
+        } else if(pred_type == "index") {
+            found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
+            if(exist)
+                res = (found > 0)
+            else if(found > 0)
+                res = robj[[ as.numeric( step[[ 2 ]][[ 2 ]] ) ]]
+                
         } else {
             #exist=TRUE is hardcoded, we are checking for the predicate condition
             res = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)
