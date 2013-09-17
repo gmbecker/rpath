@@ -44,7 +44,8 @@ node_exec = function(robj, node, exist, executors, state)
         res = lapply(robj, rpath_exec, node = node, exist = exist, executors = executors, state = state)
         ret = combineMatchLists(lst= res, trim = TRUE)
     } else if (is.list(node) && length(node) > 1) {
-        #XXX when does this code ever get invoked???
+                                        #XXX when does this code ever get invoked???
+        print("I'm in the weird place")
         browser()
         res = robj
         for(i in seq(1, length(node), by=2)) {
@@ -148,19 +149,19 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
         res = FALSE
     else
         res = no_match_found()
-
+    
     #if we hav emultiple matches from a previous step, run this step on all of them
     #separately and combine the results
     if (is(robj, "rpath_matchList"))
     {
         res = sapply(robj@matches, rpath_exec, step = step, exist = exist, executors = executors, state = state)
-    
+        
         if(!exist)
             res = combineMatchLists(lst = res, trim = TRUE)
-
+        
         return(res)
     }
-            
+    
     if(is(robj, "rpath_match"))
         robj = robj@value
     
@@ -173,7 +174,7 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
                 res = any(found)
             #if its a predicate, the matching element is robj (or no match)
             else if(found)
-                res = robj[found]
+                res = robj
         } else if(pred_type == "index") {
             found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
             if(exist)
@@ -183,15 +184,16 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
                 
         } else {
             #exist=TRUE is hardcoded, we are checking for the predicate condition
-            res = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)
+            found = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)
             #if its a predicate, the matching element is robj (or no matc)h
-            if(!exist && res)
+            if(!exist && found)
                 res = robj
         }
     } else {
-#        return(executors[[ step[[ 1 ]] ]](robj, step[[1]], exist, executors = executors, state = state))
-                res = executors[[ step[[ 1 ]] ]](robj, step[-1], exist = exist, executors = executors, state = state)
+        res = executors[[ step[[ 1 ]] ]](robj, step[-1], exist = exist, executors = executors, state = state)
     }
+    if(!exist && !is(res, "rpath_match") && !is(res, "rpath_matchList"))
+        res = rpath_match(res, state$term_condition)
     res
 }
 

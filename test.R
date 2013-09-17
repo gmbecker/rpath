@@ -8,7 +8,7 @@ rpath(lst, "/third")
 
 rpath(lst, "/third/fourth")
 
-rpath(lst, "/*[fourth]") #doesn't work!!!
+rpath(lst, "/*[fourth]")
 rpath(lst, "/*")
 rpath(lst, "/third/*")
 rpath(lst, "/third/*/*")
@@ -19,3 +19,8 @@ rpath(lst, "/list", use_classes = TRUE)
 rpath(lst, "/list/character", use_classes = TRUE)
 
 rpath(lst, "//fourth")
+
+lst2 = c(lst, lst)
+
+rpath(lst2, "/third")
+rpath(lst2, "/third/fourth")
