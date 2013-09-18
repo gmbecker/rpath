@@ -6,8 +6,8 @@ allnodes_exec = function(robj, node, exist, executors, state)
     path = "*"
     tmp = rpath_exec(robj, list("node", "*"), exist = FALSE, executors = executors, state = state)
     ret = list(tmp)
-  
-    cnt  =1 
+
+    cnt  =1
     while(!no_match(tmp) && cnt < 1000)
     {
         tmp = tmp[!sapply(tmp, checkTermCondition, term_fun = state$term_condition)]
@@ -15,22 +15,30 @@ allnodes_exec = function(robj, node, exist, executors, state)
         tmp = combineMatchLists(lst = tmp)
 #        if(length(tmp) == 1)
  #           tmp = tmp[[1]]
-       
-        
-      
+
+
+
         if(!length(tmp))
             tmp = no_match_found()
         else
             ret = c(ret, tmp)
-        
+
         cnt = cnt  + 1
     }
     combineMatchLists(lst = ret)
 }
- 
+
 
 node_exec = function(robj, node, exist, executors, state)
 {
+     if(is.list(node) && !is.null(node$index))
+        {
+            index = node$index
+            node = node[-2] #will the index always be in the second spot? I think so...
+        } else {
+            index = NULL
+        }
+
     node = unlist(node, recursive = FALSE)
     if(is.character(node) && identical(node, ""))
         if(!exist)
@@ -42,7 +50,10 @@ node_exec = function(robj, node, exist, executors, state)
     if(is(robj, "rpath_matchList"))
     {
         res = lapply(robj, rpath_exec, node = node, exist = exist, executors = executors, state = state)
-        ret = combineMatchLists(lst= res, trim = TRUE)
+        if(!exist)
+            ret = combineMatchLists(lst= res, trim = TRUE)
+        else
+            ret = simplify2array(res) #a logical vector should come out...
     } else if (is.list(node) && length(node) > 1) {
                                         #XXX when does this code ever get invoked???
         print("I'm in the weird place")
@@ -65,16 +76,13 @@ node_exec = function(robj, node, exist, executors, state)
                 for(i in seq(along=state$names_fun(robj)))
                     arr@matches = c(arr@matches, rpath_match(robj[[i]], tcond))
                 ret = arr
-#                ret = lapply(robj, function(x) x)
-#                if(length(ret) != length(robj))
-#                    unlist(ret, recursive = FALSE)
             }
         } else if (node %in% state$names_fun(robj)) {
             if(exist)
                 ret = TRUE
             else
             {
-                
+
                 found = which(node == state$names_fun(robj))
                 if(length(found) == 1)
                     ret = rpath_match(robj[[found]], tcond)
@@ -84,10 +92,6 @@ node_exec = function(robj, node, exist, executors, state)
                     for(i in found)
                         arr@matches = c(arr@matches, rpath_match(robj[[i]], tcond))
                     ret = arr
-                                        #                    ret = robj[found]
-#                ret = robj[found]
- #               if(length(found) == 1)
- #                   ret = ret[[1]]
                 }
             }
         } else {
@@ -97,16 +101,10 @@ node_exec = function(robj, node, exist, executors, state)
                 ret = no_match_found()
         }
     }
- #   if(!exist)
- #   {
- #       if(length(ret) > 1)
- #       {
- #           terms = sapply(ret, state$term_condition)
- #           ret[terms] = lapply(ret[terms], terminal_node)
- #       } else if( state$term_condition(ret)) {
- #           ret = terminal_node(ret)
- #       }
-  #  }
+
+    #doing index based existence checking is harder, but is it even possible to specify with our subset of the xpath spec?
+    if(!exist && !is.null(index))
+        ret = if(length(index) > 1) ret[index] else  ret[[index]]
     ret
 }
 
@@ -128,9 +126,9 @@ index_exec = function(robj, index, executors, state, exist = FALSE)
     }
     ret
 }
-       
-    
-executors <- list( 
+
+
+executors <- list(
     node = node_exec,
     allnodes = allnodes_exec,
     index =  index_exec,
@@ -149,22 +147,22 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
         res = FALSE
     else
         res = no_match_found()
-    
+
     #if we hav emultiple matches from a previous step, run this step on all of them
     #separately and combine the results
     if (is(robj, "rpath_matchList"))
     {
         res = sapply(robj@matches, rpath_exec, step = step, exist = exist, executors = executors, state = state)
-        
+
         if(!exist)
             res = combineMatchLists(lst = res, trim = TRUE)
-        
+
         return(res)
     }
-    
+
     if(is(robj, "rpath_match"))
         robj = robj@value
-    
+
     if(step[[1]] == "predicate") {
         pred_type = step[[2]][[1]]
     #    if (is.vector(robj) && length(robj) > 1 && pred_type!= 'index') {
@@ -181,7 +179,7 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
                 res = (found > 0)
             else if(found > 0)
                 res = robj[[ as.numeric( step[[ 2 ]][[ 2 ]] ) ]]
-                
+
         } else {
             #exist=TRUE is hardcoded, we are checking for the predicate condition
             found = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)

@@ -3,7 +3,7 @@
 split_regex = "/(?!(/|[^\\[]+\\]))"
 predicate_regex =  "^([^\\[]+)?\\[( *[^\\]]+) *\\]$";
                                         #predicate_regex =  "^([^\\[]+)"#(\\[( *[^\\]]+) *\\])*$";
-index_regex = "^([[:digit:]]+)$"
+index_regex = "^([[:digit:]]+(\\:[[:digit:]]+)?)$"
 
 
 
@@ -25,27 +25,32 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
         {
 
             predmatch = matchPredicate(st)
-            
+
             if(!no_match(predmatch)) {
-                                        #   predicate = matchRes[[2]]
-                if(grepl(index_regex, predmatch[3]))
-                    tokens = list("index", as.numeric(predmatch[[3]]))
-                else {
+                nodelst = NULL
+                tokens = NULL
+                if(nchar(predmatch[2])) {
+                    nodelst <- list("node", predmatch[2])
+                }                         #   predicate = matchRes[[2]]
+                if(grepl(index_regex, predmatch[3])){
+                    if(!is.null(nodelst))
+                        nodelst$index = eval(parse(text=predmatch[[3]])) #support numbers and x:y syntax
+                } else {
                     tokens = rpath_parse(predmatch[[3]], parsers = parsers, state = state)
                     tokens = flatten(compact(tokens))
-                tokens = regroup(tokens)
+                    tokens = regroup(tokens)
                 }
-                
-                if(nchar(predmatch[2])) {
-                    state$result <- c(state$result, list(list("node", predmatch[2])))
-                }
-                state$result <- c(state$result, list(list("predicate", tokens)))
+
+                if(!is.null(nodelst))
+                    state$result = c(state$result, list(nodelst))
+                if(!is.null(tokens))
+                    state$result <- c(state$result, list(list("predicate", tokens)))
             } else {
                 state$result <- c(state$result, list(list("node", st)))
             }
         }
     }
-    
+
     state$result
 }
 
@@ -56,7 +61,7 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
 matchPredicate = function(path)
 {
     match = grepl(predicate_regex, path, perl=TRUE)
-    
+
     if(!match)
         return(no_match_found())
 
