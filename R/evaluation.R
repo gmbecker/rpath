@@ -163,7 +163,7 @@ executors <- list(
                       rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors))
     },
     noteq = function(robj, operands, executors, state, exist) {
-        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+        !rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
                       rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors))
     },
     or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands@payload[[2]], exist = TRUE, executors = executors, state = state),
