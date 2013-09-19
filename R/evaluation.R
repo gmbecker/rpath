@@ -4,14 +4,14 @@ allnodes_exec = function(robj, node, exist, executors, state)
 {
     ret = list()
     path = "*"
-    tmp = rpath_exec(robj, list("node", "*"), exist = FALSE, executors = executors, state = state)
-    ret = list(tmp)
-
+    tmp = rpath_exec(robj, rpath_step("node", "*"), exist = FALSE, executors = executors, state = state)
+#    ret = list(tmp)
+    ret = tmp
     cnt  =1
     while(!no_match(tmp) && cnt < 1000)
     {
         tmp = tmp[!sapply(tmp, checkTermCondition, term_fun = state$term_condition)]
-        tmp = lapply(tmp, rpath_exec, step = list("node", "*"), exist = FALSE, executors = executors, state = state)
+        tmp = lapply(tmp, rpath_exec, step = rpath_step("node", "*"), exist = FALSE, executors = executors, state = state)
         tmp = combineMatchLists(lst = tmp)
 #        if(length(tmp) == 1)
  #           tmp = tmp[[1]]
@@ -31,16 +31,22 @@ allnodes_exec = function(robj, node, exist, executors, state)
 
 node_exec = function(robj, node, exist, executors, state)
 {
-     if(is.list(node) && !is.null(node$index))
+     if(is(node, "rpath_step") && length(node@index))
         {
-            index = node$index
-            node = node[-2] #will the index always be in the second spot? I think so...
+            index = node@index
+           # node = node[-2] #will the index always be in the second spot? I think so...
         } else {
             index = NULL
         }
 
-    node = unlist(node, recursive = FALSE)
-    if(is.character(node) && identical(node, ""))
+     if(is.list(node))
+     {
+         res = lapply(node, function(x) node_exec(robj, x, exist = exist, executors = executors, state = state))
+         return(rpath_matchList(matches = res))
+     }
+     pload = node@payload[[1]]
+#    node = unlist(node, recursive = FALSE)
+    if(is.character(pload) && identical(pload, ""))
         if(!exist)
             return(robj)
         else
@@ -54,18 +60,18 @@ node_exec = function(robj, node, exist, executors, state)
             ret = combineMatchLists(lst= res, trim = TRUE)
         else
             ret = simplify2array(res) #a logical vector should come out...
-    } else if (is.list(node) && length(node) > 1) {
+#    } else if (is.list(node) && length(node) > 1) {
                                         #XXX when does this code ever get invoked???
-        print("I'm in the weird place")
-        browser()
-        res = robj
-        for(i in seq(1, length(node), by=2)) {
-            res = rpath_exec(res, node[i + 0:1], exist, executors = executors, state = state)
-        }
-        ret = res
+ #       print("I'm in the weird place")
+  #      browser()
+   #     res = robj
+    #    for(i in seq(1, length(node), by=2)) {
+     #       res = rpath_exec(res, node[i + 0:1], exist, executors = executors, state = state)
+      #  }
+       # ret = res
     }  else  {
         tcond = state$term_condition
-        if(identical(node, "*"))
+        if(identical(pload, "*"))
         {
             found = seq(along = state$names_fun(robj))
             if(exist)
@@ -77,13 +83,13 @@ node_exec = function(robj, node, exist, executors, state)
                     arr@matches = c(arr@matches, rpath_match(robj[[i]], tcond))
                 ret = arr
             }
-        } else if (node %in% state$names_fun(robj)) {
+        } else if (pload %in% state$names_fun(robj)) {
             if(exist)
                 ret = TRUE
             else
             {
 
-                found = which(node == state$names_fun(robj))
+                found = which(pload == state$names_fun(robj))
                 if(length(found) == 1)
                     ret = rpath_match(robj[[found]], tcond)
                 else
@@ -111,6 +117,8 @@ node_exec = function(robj, node, exist, executors, state)
 
 index_exec = function(robj, index, executors, state, exist = FALSE)
 {
+    if(is(index, "rpath_step"))
+        index = index@payload[[1]]
     if(!is(index, "numeric"))
        index =  as.numeric(index)
     if(exist)
@@ -128,29 +136,23 @@ index_exec = function(robj, index, executors, state, exist = FALSE)
 }
 
 
-#executors <- list(
-#    node = node_exec,
-#    allnodes = allnodes_exec,
-#    index =  index_exec,
-#    not = function(robj, operand, executors, state, exist) !rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
- #   eq = function(robj, operands, executors, state, exist) rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
-  #  noteq = function(robj, operands, executors, state, exist) !rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
-  #  or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], exist = TRUE, executors = executors, state = state),
-  #  and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], exist =  TRUE, executors = executors, state = state),
-   # string = function(robj, string, executors, state, exist) string
-   # )
-
-
+#second argument is always a rpath_step or list of rpath_steps
 executors <- list(
     node = node_exec,
     allnodes = allnodes_exec,
     index =  index_exec,
-    not = function(robj, operand, executors, state, exist) !rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
-    eq = function(robj, operands, executors, state, exist) rpath_compare(rpath_exec(robj, operands[[1]], exist = FALSE, state = state, executors = executors),         rpath_exec(robj, operands[[2]], exist = FALSE, state = state, executors = executors)),
-    noteq = function(robj, operands, executors, state, exist) !rpath_compare(rpath_exec(robj, operands[[1]], exist = FALSE, state = state, executors = executors),         rpath_exec(robj, operands[[2]], exist = FALSE, state = state, executors = executors)),
-    or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], exist = TRUE, executors = executors, state = state),
-    and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], exist =  TRUE, executors = executors, state = state),
-    string = function(robj, string, executors, state, exist) string
+    not = function(robj, operand, executors, state, exist) !rpath_exec(robj, operand@payload[[1]], TRUE, executors = executors, state = state, exist = exist),
+    eq = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors))
+    },
+    noteq = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors))
+    },
+    or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands@payload[[2]], exist = TRUE, executors = executors, state = state),
+    and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands@payload[[2]], exist =  TRUE, executors = executors, state = state),
+    string = function(robj, string, executors, state, exist) rpath_const("character", string@payload[[1]])
     )
 
 
@@ -174,35 +176,47 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
         return(res)
     }
 
+    #this will happen when we pass in the payload from an rpath_step object
+    if(is(step, "list"))
+    {
+        res = sapply(step, function(st) rpath_exec(robj, step = st, exist = exist, executors = executors, state = state))
+        if(!exist)
+            res = combineMatchLists(lst = res, trim = TRUE)
+        return(res)
+    }
+    
     if(is(robj, "rpath_match"))
         robj = robj@value
 
-    if(step[[1]] == "predicate") {
-        pred_type = step[[2]][[1]]
+    
+#    if(step[[1]] == "predicate") {
+    if(step@type == "predicate") {
+        pred_type = step@payload[[1]]@type
     #    if (is.vector(robj) && length(robj) > 1 && pred_type!= 'index') {
-        if ( length(robj) > 1 && pred_type!= 'index') {
-            found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
+        if ( length(robj) > 1 && pred_type != 'index') {
+            found = rpath_exec(robj, step@payload[[1]], exist = TRUE, executors = executors, state = state)
             if(exist)
                 res = any(found)
             #if its a predicate, the matching element is robj (or no match)
             else if(found)
                 res = robj
         } else if(pred_type == "index") {
-            found = rpath_exec(robj, step[[2]], exist = TRUE, executors = executors, state = state)
+            found = rpath_exec(robj, step@payload, exist = TRUE, executors = executors, state = state)
             if(exist)
                 res = (found > 0)
             else if(found > 0)
-                res = robj[[ as.numeric( step[[ 2 ]][[ 2 ]] ) ]]
+                res = robj[[ as.numeric( step@payload[[1]]@payload[[1]] ) ]]
 
         } else {
             #exist=TRUE is hardcoded, we are checking for the predicate condition
-            found = rpath_exec(robj, step = step[[2]], exist = TRUE, executors= executors, state = state)
+            found = rpath_exec(robj, step = step@payload, exist = TRUE, executors= executors, state = state)
             #if its a predicate, the matching element is robj (or no matc)h
             if(!exist && found)
                 res = robj
         }
     } else {
-        res = executors[[ step[[ 1 ]] ]](robj, step[-1], exist = exist, executors = executors, state = state)
+      #  res = executors[[ step@type ]](robj, step@payload, exist = exist, executors = executors, state = state)
+          res = executors[[ step@type ]](robj, step, exist = exist, executors = executors, state = state)
     }
     if(!exist && !is(res, "rpath_match") && !is(res, "rpath_matchList"))
         res = rpath_match(res, state$term_condition)

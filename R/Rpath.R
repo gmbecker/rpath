@@ -8,23 +8,37 @@ rpath_compare = function(lNode, rNode)
    # else if (no_match(lNode) || no_match(rNode))
     if (no_match(lNode) || no_match(rNode))
         return(FALSE)
+
+
+    ret = logical()
+    const_type = NULL
+    llst = FALSE
+    rlst = FALSE
     
-    if(is(lNode, "rpath_match"))
+    if(is(lNode, "rpath_constant") )
+    {
+        const_type = lNode@type
+        lNode = lNode@value
+    } else if(is(lNode, "rpath_match"))
         lNode = lNode@value
     else if (is(lNode, "rpath_matchList"))
+    {
         lNode = lNode@matches
-
-    if(is(rNode, "rpath_match"))
+        llst = TRUE
+    }
+    
+    if(is(rNode, "rpath_constant") )
+    {
+        const_type = rNode@type
         rNode = rNode@value
-    else if (is(rNode, "rpath_matchList"))
+    } else if(is(rNode, "rpath_match"))
+        rNode = rNode@value
+    else if (is(rNode, "rpath_matchList")) {
         rNode = rNode@matches
- 
+        rlst = TRUE
+    }
     
-    llst = is.vector(lNode)
-    rlst = is.vector(rNode)
-
-    ret = FALSE
-    
+      
     if(rlst && !llst)
     {
         llst = TRUE
@@ -36,26 +50,47 @@ rpath_compare = function(lNode, rNode)
 
     if(rlst && llst)
     {
+       
         for(li in seq(length(lNode), 1, by=-1)){
+            tmp = logical()
             for(ri in seq(length(rNode), 1, by=-1)){
-                if(lNode[[li]] == rNode[[ri]])
-                    ret = TRUE
+             #   if(lNode[[li]] == rNode[[ri]])
+         #       if(do_compare(lNode[[li]], rNode[[ri]], const_type))
+          #          ret = TRUE
+                tmp = c(tmp, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type))
+           
+                #ret = c(ret, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type))
             }
+            #XXXdo we want any or all here???
+            ret = c(ret, any(tmp))
         }
     } else if (llst && !rlst) {
         for(li in seq(length(lNode), 1, by=-1)) {
-            if(lNode[[li]] == rNode)
-                ret = TRUE
+                                        # if(lNode[[li]] == rNode)
+ #           if(do_compare(lNode[[li]], rNode, const_type))
+  #              ret = TRUE
+            ret = c(ret, do_compare(lNode[[li]]@value, rNode, const_type))
         }
-    } else if (lNode == rNode) {
-        ret = TRUE
+    } else {
+        ret = do_compare(lNode, rNode, const_type)
     }
-
     ret
 }
 
-    
+do_compare = function(l, r, force_type = NULL)
+{
+    if(!is.null(force_type))
+    {
+        res = tryCatch({
+            l = as(l, force_type)
+            r = as(r, force_type)
+        }, error = function(e) e)
+        if(is(res, "error"))
+            return(FALSE)
+    }
 
+    l == r
+}
 
 
 

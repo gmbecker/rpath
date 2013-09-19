@@ -6,12 +6,15 @@ makeParsers = function(state, ...)
     parsers <- list(
         '^//$' = function(match, index, state)
     {
-        list("allnodes", "")
+        rpath_step("allnodes", "")
+#        list("allnodes", "")
     },
         '^("|\')([^"]*?)\\1$' = function(match, index = length(state$result) + 1, state)
     {
 #        state$result[[index]] <- list("string", match)
-        list("string", match)
+#        list("string", match)
+        match = gsub("(^('|\")|('|\")$)", "", match)
+        rpath_step("string", match)
     },
         '(/[^=[:space:]!]*)' = function(match, index = length(state$result) + 1, state)
     {
@@ -25,20 +28,23 @@ makeParsers = function(state, ...)
                 match = match[[2]]
         }
         #state$result[[index]] <- c("node", match);
-        list("node", match)
+       # list("node", match)
+        rpath_step("string", match)
     },
         #XXX I think these are going to cause problems with complicated paths like /a[b[c==5]/d == 6]
         '[^\\[]+(==|!=|\\|\\||&&)[^\\]]+' = function(match, index, state)
     {
         op = gsub(".*(==|!=|\\|\\||&&).*", "\\1", match)
         sides = strsplit(match, split=op, fixed=TRUE)[[1]]
-        list(list("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
+#        list(list("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
+        list(rpath_step("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
     },
         '![^\\]]+' = function(match, index, state)
     {
         op = "!"
         node = gsub(op, "", match,fixed = TRUE)
-        list(list("operator", op), rpath_parse(node, state = new.env()))
+        list(rpath_step("operator", op), rpath_parse(node, state = new.env()))
+ #       list(list("operator", op), rpath_parse(node, state = new.env()))
     }#,
         
         

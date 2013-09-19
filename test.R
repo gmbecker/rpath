@@ -30,6 +30,7 @@ rpath(lst2, "/third[1]/fourth")
 
 rpath(lst2, "/third[1]")
 
-lst3 = c(lst, third=list(fourth = 6, fifth = "lo"))
 
+lst3 = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!", third = list(fourth = 6, fifth = "yay!"))
 rpath(lst3, "/third[fourth=='6']")
+rpath(lst3, "/third")

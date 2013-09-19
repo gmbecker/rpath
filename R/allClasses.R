@@ -14,6 +14,15 @@ rpath_match = function(value, term_condition = NULL)
     }
 }
 
+setClass("rpath_constant", representation = list(type="character"), contains = "rpath_match")
+
+rpath_const = function(type, value)
+{
+    if(!is(value, type))
+        stop("constant value ", value, "does not match declared type ", type) 
+    new("rpath_constant", type = type, value = value)
+}
+
 setClass("rpath_matchList", representation(matches = "list"), validity = function(object) all(sapply(object@matches, function(x) is(x, "rpath_match"))))
 
 setAs("list", "rpath_matchList", function(from) new("rpath_matchList", matches = from))
@@ -61,4 +70,11 @@ trim_matchList = function(mlist)
     mlist[realmatch]
 }
 
-setClass("rpath_instr", representation = list(type = "character", payload = "ANY"))
+setClass("rpath_step", representation = list(type = "character", payload = "list", index = "numeric"))
+
+rpath_step = function(type, payload, index = numeric())
+{
+    if(!is(payload, "list"))
+        payload = list(payload)
+    new("rpath_step", type = type, payload = payload, index = index)
+}

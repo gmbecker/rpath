@@ -22,7 +22,7 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
     for(st in steps)
     {
         if(st == "//")
-            state$result <- c(state$result, list(list("allnodes", "")))
+            state$result <- c(state$result, rpath_step("allnodes", ""))
         else
         {
 
@@ -32,11 +32,13 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
                 nodelst = NULL
                 tokens = NULL
                 if(nchar(predmatch[2])) {
-                    nodelst <- list("node", predmatch[2])
+#                    nodelst <- list("node", predmatch[2])
+                    nodelst <- rpath_step("node", predmatch[2])
                 }                         #   predicate = matchRes[[2]]
                 if(grepl(index_regex, predmatch[3])){
                     if(!is.null(nodelst))
-                        nodelst$index = eval(parse(text=predmatch[[3]])) #support numbers and x:y syntax
+                        nodelst@index = eval(parse(text=predmatch[[3]])) #support numbers and x:y syntax
+                    #nodelst$index = eval(parse(text=predmatch[[3]])) #support numbers and x:y syntax
                 } else {
                     tokens = rpath_parse(predmatch[[3]], parsers = parsers, state = state)
                    # tokens = flatten(compact(tokens))
@@ -48,10 +50,10 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
   #                  state$result = c(state$result, list(nodelst))
                     state$result[[length(state$result) + 1]] <- nodelst
                 if(!is.null(tokens))
-                    state$result[[length(state$result) + 1]] <- list("predicate", tokens)
+                    state$result[[length(state$result) + 1]] <- rpath_step("predicate", tokens)
           #          state$result <- c(state$result, list(list("predicate", tokens)))
             } else {
-                state$result[[length(state$result) + 1]] <- list("node", st)
+                state$result[[length(state$result) + 1]] <- rpath_step("node", st)
 #                state$result <- c(state$result, list(list("node", st)))
             }
         }
@@ -85,12 +87,14 @@ doPredicate = function(path)
         return(no_match_found())
 
     if(grepl(index_regex, predmatch[3]))
-        parsedPred = list("index", as.numeric(predmatch[3]))
+ #       parsedPred = list("index", as.numeric(predmatch[3]))
+               parsedPred = rpath_step("index", as.numeric(predmatch[3]))
     else
        # parsedPred = rpath_parse(path)
         parsedPred = rpath_split(path, state = new.env())
 
-    list(list("node", predmatch[2]), parsedPred)
+    list(rpath_step("node", predmatch[2]), parsedPred)
+#    list(list("node", predmatch[2]), parsedPred)
 }
 
 #Argh! why can't I figure out a regular expression to do this :(
