@@ -60,3 +60,5 @@ trim_matchList = function(mlist)
     realmatch = sapply(mlist@matches, function(x) !no_match(x))
     mlist[realmatch]
 }
+
+setClass("rpath_instr", representation = list(type = "character", payload = "ANY"))

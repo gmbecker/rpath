@@ -19,8 +19,17 @@ rpath(lst, "/list", use_classes = TRUE)
 rpath(lst, "/list/character", use_classes = TRUE)
 
 rpath(lst, "//fourth")
+rpath(lst, "/*/fourth")
 
 lst2 = c(lst, lst)
 
 rpath(lst2, "/third")
 rpath(lst2, "/third/fourth")
+
+rpath(lst2, "/third[1]/fourth")
+
+rpath(lst2, "/third[1]")
+
+lst3 = c(lst, third=list(fourth = 6, fifth = "lo"))
+
+rpath(lst3, "/third[fourth=='6']")

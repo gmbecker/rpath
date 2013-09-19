@@ -12,32 +12,61 @@ checkTermCondition = function(x, term_fun)
 
 regroup = function(tokens)
 {
-    tokens = unlist(tokens)
+  #  tokens = unlist(tokens)
     for(key in names(operators))
     {
         operator = operators[[key]]
-        for(i in seq(1, length(tokens), by=2))
+        if(FALSE)
         {
-            if(tokens[[i]] == "operator" && tokens[[i+1]]  == key)
+            
+            for(i in seq(1, length(tokens)))
             {
-                if(operator$operand == 1){
-                    tokens[[i]] = operator$name
-                    tmp = tokens[i+2:3]
-                    tokens[[i+1]] = tmp
-                    tokens = tokens[-seq(i+2:3)]
-                } else if (operator.operand == 2) {
-                    #slice i-2, i and i+2, i+4
-                    operands = unlist(c(tokens[i-2:0], tokens[i+2:4]))
-                    tokens[[i]] = operator$name
-                    tokens[[i+1]] = operands
+                if(tokens[[i]][[1]] == "operator" && tokens[[i]][[2]]  == key)
+                {
+                    if(operator$operand == 1){
+                    
+                        tokens[[i]][[1]] = operator$name
+                        tmp = tokens[[i+2]]
+                        tokens[[i+1]] = tmp
+                        tokens = tokens[-(i+2)]
+                    } else if (operator$operand == 2) {
+                                        #slice i-2, i and i+2, i+4
+                                        # operands = unlist(c(tokens[i-2:0], tokens[i+2:4]))
+                        operands = list(tokens[[i+1]], tokens[[i+2]])
+                        tokens[[i]][[1]] = operator$name
+                        tokens[[i]][[2]] = operands
                                         #splice i+2, 2 and i-2,2
-                    tokens = tokens[-seq(i+2:3)]
-                    tokens = tokens[-seq(i-2:1)]
+                        tokens = tokens[-seq(i+2:5)]
+                                        #                    tokens = tokens[-seq(i-2:1)]
+                    }
                 }
             }
         }
-        
+        i = 1
+        while(i < length(tokens))
+#        for(i in seq(1, length(tokens)))
+        {
+            if(tokens[[i]][[1]] == "operator" && tokens[[i]][[2]]  == key)
+            {
+                if(operator$operand == 1){
+                    tokens[[i]][[1]] = operator$name
+                    tokens[[i]][[2]] = tokens[[i+1]]
+                    tokens = tokens[-(i+1)]
+                } else if (operator$operand == 2) {
+                                        #slice i-2, i and i+2, i+4
+                                        # operands = unlist(c(tokens[i-2:0], tokens[i+2:4]))
+                         operands = list(tokens[[i+1]], tokens[[i+2]])
+                        tokens[[i]][[1]] = operator$name
+                        tokens[[i]][[2]] = operands
+                                        #splice i+2, 2 and i-2,2
+                        tokens = tokens[-(i+1:2)]
+                                        #                    tokens = tokens[-seq(i-2:1)]
+                }
+            }
+            i = i + 1
+        }
     }
+    
     tokens
 }
 

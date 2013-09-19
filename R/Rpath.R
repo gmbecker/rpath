@@ -85,10 +85,10 @@ rpath = function(robj, path, state = new.env(), use_classes = FALSE, names_fun =
         list()
     else if (is(res, "rpath_matchList"))
     {
-        res = res[sapply(res@matches, function(x) !no_match(x))]
+        res = trimMatchList(res)
         res = lapply(res@matches, function(x) x@value)
     } else if (is(res, "rpath_match")) {
-        res = res@value
+        res = list(res@value)
     }
     
     res

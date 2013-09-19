@@ -10,6 +10,8 @@ index_regex = "^([[:digit:]]+(\\:[[:digit:]]+)?)$"
 
 rpath_split = function(path, parsers = makeParsers(state = state), state = new.env())
 {
+    if(is.null(state$result))
+        state$result = list()
     steps = doSplit(path)
 
     if(steps[1] == "" || steps[1] == "/") {
@@ -37,16 +39,20 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
                         nodelst$index = eval(parse(text=predmatch[[3]])) #support numbers and x:y syntax
                 } else {
                     tokens = rpath_parse(predmatch[[3]], parsers = parsers, state = state)
-                    tokens = flatten(compact(tokens))
-                    tokens = regroup(tokens)
+                   # tokens = flatten(compact(tokens))
+                    tokens = regroup(unlist(tokens, recursive = FALSE))
+#                    tokens = regroup(tokens)
                 }
 
                 if(!is.null(nodelst))
-                    state$result = c(state$result, list(nodelst))
+  #                  state$result = c(state$result, list(nodelst))
+                    state$result[[length(state$result) + 1]] <- nodelst
                 if(!is.null(tokens))
-                    state$result <- c(state$result, list(list("predicate", tokens)))
+                    state$result[[length(state$result) + 1]] <- list("predicate", tokens)
+          #          state$result <- c(state$result, list(list("predicate", tokens)))
             } else {
-                state$result <- c(state$result, list(list("node", st)))
+                state$result[[length(state$result) + 1]] <- list("node", st)
+#                state$result <- c(state$result, list(list("node", st)))
             }
         }
     }

@@ -128,17 +128,31 @@ index_exec = function(robj, index, executors, state, exist = FALSE)
 }
 
 
+#executors <- list(
+#    node = node_exec,
+#    allnodes = allnodes_exec,
+#    index =  index_exec,
+#    not = function(robj, operand, executors, state, exist) !rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
+ #   eq = function(robj, operands, executors, state, exist) rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
+  #  noteq = function(robj, operands, executors, state, exist) !rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
+  #  or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], exist = TRUE, executors = executors, state = state),
+  #  and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], exist =  TRUE, executors = executors, state = state),
+   # string = function(robj, string, executors, state, exist) string
+   # )
+
+
 executors <- list(
     node = node_exec,
     allnodes = allnodes_exec,
     index =  index_exec,
-    not = function(robj, operand, executors, state, exist) rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
-    eq = function(robj, operands, executors, state, exist) rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
-    noteq = function(robj, operands, executors, state, exist) !rpath_compare(robj, operands[[1]], operands[[2]], exist = exist),
+    not = function(robj, operand, executors, state, exist) !rpath_exec(robj, operand, TRUE, executors = executors, state = state, exist = exist),
+    eq = function(robj, operands, executors, state, exist) rpath_compare(rpath_exec(robj, operands[[1]], exist = FALSE, state = state, executors = executors),         rpath_exec(robj, operands[[2]], exist = FALSE, state = state, executors = executors)),
+    noteq = function(robj, operands, executors, state, exist) !rpath_compare(rpath_exec(robj, operands[[1]], exist = FALSE, state = state, executors = executors),         rpath_exec(robj, operands[[2]], exist = FALSE, state = state, executors = executors)),
     or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands[[2]], exist = TRUE, executors = executors, state = state),
     and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands[[2]], exist =  TRUE, executors = executors, state = state),
     string = function(robj, string, executors, state, exist) string
     )
+
 
 
 rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)

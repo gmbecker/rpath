@@ -8,7 +8,7 @@ makeParsers = function(state, ...)
     {
         list("allnodes", "")
     },
-        '"([^"]*?)"' = function(match, index = length(state$result) + 1, state)
+        '^("|\')([^"]*?)\\1$' = function(match, index = length(state$result) + 1, state)
     {
 #        state$result[[index]] <- list("string", match)
         list("string", match)
@@ -27,11 +27,26 @@ makeParsers = function(state, ...)
         #state$result[[index]] <- c("node", match);
         list("node", match)
     },
-        '(==|!=|!|\\|\\||&&)' = function(match, index = length(result) + 1, state)
+        #XXX I think these are going to cause problems with complicated paths like /a[b[c==5]/d == 6]
+        '[^\\[]+(==|!=|\\|\\||&&)[^\\]]+' = function(match, index, state)
     {
-#        state$result[[index]] <- list("operator", match)
-        list("operator", match)
-    }
+        op = gsub(".*(==|!=|\\|\\||&&).*", "\\1", match)
+        sides = strsplit(match, split=op, fixed=TRUE)[[1]]
+        list(list("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
+    },
+        '![^\\]]+' = function(match, index, state)
+    {
+        op = "!"
+        node = gsub(op, "", match,fixed = TRUE)
+        list(list("operator", op), rpath_parse(node, state = new.env()))
+    }#,
+        
+        
+  #      '(==|!=|!|\\|\\||&&)' = function(match, index = length(result) + 1, state)
+  #  {
+#        state$result[[index]] <- lsist("operator", match)
+   #     list("operator", match)
+   # }
         )
     args = list(...)
     parsers[names(args)] = args
@@ -40,6 +55,9 @@ makeParsers = function(state, ...)
 
 rpath_parse = function(predicate, parsers = makeParsers(state = state), state)
 {
+    if(!nchar(predicate))
+        return(NULL)
+    ret = list()
 #    state$result <- list()
     for( i in seq(1, length(parsers)))
     {
@@ -50,17 +68,27 @@ rpath_parse = function(predicate, parsers = makeParsers(state = state), state)
         if(any(tmpmatch > 0))
         {
             matches = regmatches(predicate, tmpmatch)
-            res = sapply(matches, parsers[[i]], state = state)
-            gsub(expr, "", predicate, perl=TRUE)
+            res = lapply(matches, parsers[[i]], state = state)
+            if(length(res) == 1)
+                ret[length(ret) + 1] = res
+            else if (length(res) > 1)
+                ret = c(ret, res)
+                
+            predicate = gsub(expr, "", predicate, perl=TRUE)
 #            regmatches(predicate, matches) <- ""
         }
     }
 
     #get rid of annoying
 #    predicate = gsub("^\\.([^\\[\\(/]+)$", "\\1", predicate) 
-    predicate = rpath_split(predicate, parsers, new.env())
-    state$lastSteps <- c(state$lastSteps, predicate)
-
+    if(nchar(predicate))
+    {
+        predicate = rpath_split(predicate, parsers, new.env())
+        state$lastSteps <- c(state$lastSteps, predicate)
+        ret = c(ret, predicate)
+    }
    # return(state$result)
-    predicate
+#    predicate
+#    unlist(ret, recursive = FALSE)
+    ret
 }
