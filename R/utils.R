@@ -90,3 +90,13 @@ trimMatchList = function(mlist)
     drop = sapply(mlist, no_match)
     mlist[!drop]
 }
+
+call_attr_fun = function(obj, attr_fun)
+{
+    if(no_match(obj))
+        return(list())
+    if(is(obj, "rpath_match"))
+        obj = obj@value
+
+    attr_fun(obj)
+}

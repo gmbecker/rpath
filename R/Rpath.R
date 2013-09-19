@@ -94,12 +94,13 @@ do_compare = function(l, r, force_type = NULL)
 
 
 
-rpath = function(robj, path, state = new.env(), use_classes = FALSE, names_fun = if(use_classes) getClassesVec else names, term_condition = list_termination)
+rpath = function(robj, path, state = new.env(), use_classes = FALSE, names_fun = if(use_classes) getClassesVec else names, term_condition = list_termination, attr_fun = attributes)
 {
     state$lastSteps = list()
     state$result = list()
     state$names_fun = names_fun
     state$term_condition = term_condition
+    state$attr_fun = attr_fun
     if(is.null(robj) || !is(path, "character") || !nchar(path))
         return(list())
 

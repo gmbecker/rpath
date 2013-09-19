@@ -16,6 +16,11 @@ makeParsers = function(state, ...)
         match = gsub("(^('|\")|('|\")$)", "", match)
         rpath_step("string", match)
     },
+        '^@[^=[:space:]!]*$' = function(match, index, state)
+    {
+        match = gsub("@", "", match, fixed= TRUE)
+        rpath_step("attribute", match)
+     },
         '(/[^=[:space:]!]*)' = function(match, index = length(state$result) + 1, state)
     {
         if (match == ".")
@@ -29,7 +34,7 @@ makeParsers = function(state, ...)
         }
         #state$result[[index]] <- c("node", match);
        # list("node", match)
-        rpath_step("string", match)
+        rpath_step("node", match)
     },
         #XXX I think these are going to cause problems with complicated paths like /a[b[c==5]/d == 6]
         '[^\\[]+(==|!=|\\|\\||&&)[^\\]]+' = function(match, index, state)

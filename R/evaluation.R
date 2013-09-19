@@ -114,6 +114,22 @@ node_exec = function(robj, node, exist, executors, state)
     ret
 }
 
+attribute_exec = function(robj, step, executors, state, exist)
+{
+    if(exist)
+        ret = FALSE
+    else
+        ret = no_match_found()
+    ats = call_attr_fun(robj, state$attr_fun)
+    if(step@payload[[1]] %in% names(ats))
+    {
+        if(exist)
+            ret = TRUE
+        else
+            ret = ats[[ step@payload[[ 1 ]] ]]
+    }
+    ret
+}
 
 index_exec = function(robj, index, executors, state, exist = FALSE)
 {
@@ -152,7 +168,8 @@ executors <- list(
     },
     or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands@payload[[2]], exist = TRUE, executors = executors, state = state),
     and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands@payload[[2]], exist =  TRUE, executors = executors, state = state),
-    string = function(robj, string, executors, state, exist) rpath_const("character", string@payload[[1]])
+    string = function(robj, string, executors, state, exist) rpath_const("character", string@payload[[1]]),
+    attribute = attribute_exec
     )
 
 

@@ -74,6 +74,11 @@ setClass("rpath_step", representation = list(type = "character", payload = "list
 
 rpath_step = function(type, payload, index = numeric())
 {
+    if(type == "node" && is(payload, "character") && grepl("^@", payload))
+    {
+        type = "attribute"
+        payload = gsub("@", "", payload)
+    }
     if(!is(payload, "list"))
         payload = list(payload)
     new("rpath_step", type = type, payload = payload, index = index)

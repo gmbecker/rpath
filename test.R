@@ -31,6 +31,15 @@ rpath(lst2, "/third[1]/fourth")
 rpath(lst2, "/third[1]")
 
 
-lst3 = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!", third = list(fourth = 6, fifth = "yay!"))
+lst3 = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!", third = list(fourth = 6, fifth = "yay!"), third = list(fourth=3, fifth="not6"))
 rpath(lst3, "/third[fourth=='6']")
 rpath(lst3, "/third")
+rpath(lst3, "/third[fourth!='6']")
+
+
+attrfun = function(obj) c(sapply(names(obj), function(x) obj[[x]], simplify=FALSE), class = class(obj))
+
+rpath(lst3, "/third/@class", attr_fun = attrfun)
+rpath(lst3, "/third/@fourth", attr_fun = attrfun)
+rpath(lst3, "/third/*[@class=='character']", attr_fun = attrfun)
+rpath(lst3, "/third[@fourth=='6']", attr_fun = attrfun)
