@@ -23,6 +23,7 @@ rpath(lst, "/*/fourth")
 rpath(lst, "//third")
 
 rpath(lst, "//logical", use_classes=TRUE)
+rpath(lst, "//character", use_classes=TRUE)
 
 lst2 = c(lst, lst)
 
