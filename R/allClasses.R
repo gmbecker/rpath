@@ -53,22 +53,6 @@ no_match_found= function()
     new("no_match")
 }
 
-no_match = function(obj)
-    {
-        if(is(obj, "rpath_matchList"))
-        {
-            
-            ( !length(obj) || all(sapply(obj@matches, no_match) ) ) 
-        } else {
-            is(obj, "no_match")
-        }
-    }
-
-trim_matchList = function(mlist)
-{
-    realmatch = sapply(mlist@matches, function(x) !no_match(x))
-    mlist[realmatch]
-}
 
 setClass("rpath_step", representation = list(type = "character", payload = "list", index = "numeric"))
 

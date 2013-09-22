@@ -37,10 +37,13 @@ makeParsers = function(state, ...)
         rpath_step("node", match)
     },
         #XXX I think these are going to cause problems with complicated paths like /a[b[c==5]/d == 6]
-        '[^\\[]+(==|!=|\\|\\||&&)[^\\]]+' = function(match, index, state)
+        '^([^\\[!=&\\(\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&)([^\\[!=&\\|\\(]+|\\([^\\)]+\\))$' = function(match, index, state)
     {
-        op = gsub(".*(==|!=|\\|\\||&&).*", "\\1", match)
-        sides = strsplit(match, split=op, fixed=TRUE)[[1]]
+        op = gsub( '([^\\[!=&\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&)([^\\[!=&]+|\\([^\\)]+\\))', "\\2", match)
+        tmp = gsub(op, paste0("_=-_", op, "_=-_"), match, fixed=TRUE)
+        sides = strsplit(tmp, split = paste0("_=-_", op, "_=-_"), fixed = TRUE)[[1]]
+        #op = gsub(".*(==|!=|\\|\\||&&).*", "\\1", match)
+       # sides = strsplit(match, split=op, fixed=TRUE)[[1]]
 #        list(list("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
         list(rpath_step("operator", op), rpath_parse(sides[1], state = new.env()), rpath_parse(sides[2], state = new.env()))
     },

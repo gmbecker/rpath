@@ -20,6 +20,9 @@ rpath(lst, "/list/character", use_classes = TRUE)
 
 rpath(lst, "//fourth")
 rpath(lst, "/*/fourth")
+rpath(lst, "//third")
+
+rpath(lst, "//logical", use_classes=TRUE)
 
 lst2 = c(lst, lst)
 
@@ -43,3 +46,8 @@ rpath(lst3, "/third/@class", attr_fun = attrfun)
 rpath(lst3, "/third/@fourth", attr_fun = attrfun)
 rpath(lst3, "/third/*[@class=='character']", attr_fun = attrfun)
 rpath(lst3, "/third[@fourth=='6']", attr_fun = attrfun)
+
+rpath(lst3, "/third[!fourth]")
+rpath(lst3, "/third[!zzz]")
+rpath(lst3, "/third[zzz]")
+rpath(lst3, "/third[zzz||fourth=='6']") #not working

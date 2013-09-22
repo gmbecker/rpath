@@ -20,12 +20,18 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
         steps = steps[-1]
     }
 
-    for(st in steps)
+    i = 1
+    while(i <= length(steps))
+#    for(st in steps)
     {
+        st = steps[i]
         if(st == "//")
-            state$result <- c(state$result, rpath_step("allnodes", ""))
-        else
         {
+            if(i == length(steps))
+                stop("path seems to have terminated with '//'. This is not valid, was '//*' intented?")
+            state$result <- c(state$result, rpath_step("allnodes", rpath_split(steps[i+1], state = new.env() )))
+            steps = steps[-i]
+        } else {
             predmatch = matchPredicate(st)
 
             if(!no_match(predmatch)) {
@@ -51,6 +57,7 @@ rpath_split = function(path, parsers = makeParsers(state = state), state = new.e
                 state$result[[length(state$result) + 1]] <- rpath_step("node", st)
             }
         }
+        i = i + 1
     }
 
     state$result

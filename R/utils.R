@@ -64,28 +64,36 @@ combineMatchLists = function(..., lst, trim = TRUE)
     if(missing(lst))
         lst = list(...)
 
-    ret = list()
-    for(tmp in lst)
-    {
-        if(!no_match(tmp))
-        {
-            if(is(tmp, "rpath_matchList"))
-                ret = c(ret, tmp@matches)
-            else if (is(tmp, "rpath_match"))
-                ret = c(ret, tmp)
-        }
-    }
+    if(is(lst, "rpath_match"))
+        lst = list(lst)
     
-    res = new("rpath_matchList", matches = ret)
+    if(is(lst, "rpath_matchList"))
+        res = lst
+    else {
+    
+        ret = list()
+        for(tmp in lst)
+        {
+            if(!no_match(tmp))
+            {
+                if(is(tmp, "rpath_matchList"))
+                    ret = c(ret, tmp@matches)
+                else if (is(tmp, "rpath_match"))
+                    ret = c(ret, tmp)
+            }
+        }
+        
+        res = new("rpath_matchList", matches = ret)
+    }
     if(trim)
-        res = trimMatchList(res)
+        res = trim_matchList(res)
     if(length(res) == 1)
         res = res[[1]]
     res
 
 }
 
-trimMatchList = function(mlist)
+trim_matchList = function(mlist)
 {
     drop = sapply(mlist, no_match)
     mlist[!drop]
@@ -100,3 +108,14 @@ call_attr_fun = function(obj, attr_fun)
 
     attr_fun(obj)
 }
+
+no_match = function(obj)
+    {
+        if(is(obj, "rpath_matchList"))
+        {
+            
+            ( !length(obj@matches) || all(sapply(obj@matches, no_match) ) ) 
+        } else {
+            is(obj, "no_match")
+        }
+    }
