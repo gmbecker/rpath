@@ -117,13 +117,29 @@ node_exec = function(robj, node, exist, executors, state)
                 ret = FALSE
             else
                 ret = no_match_found()
+            return(ret)
         }
     }
 
     #doing index based existence checking is harder, but is it even possible to specify with our subset of the xpath spec?
-    if(!exist && !is.null(index))
-        ret = if(length(index) > 1) ret[index] else  ret[[index]]
-    ret
+     if(!is.null(index))
+     {
+         if(is(ret, "rpath_match"))
+             ret = as(list(ret), "rpath_matchList")
+         
+         if(!exist)
+         {
+             if(any(index > length(ret@matches)))
+                 index = index[which(index <= length(ret@matches))]
+             if(!length(index))
+                 ret = no_match_found()
+             else
+                 ret = if(length(index) > 1) ret[index] else  ret[[index]]
+         } else {
+             ret = all(index > length(ret@matches))
+         }
+     }
+     ret
 }
 
 attribute_exec = function(robj, step, executors, state, exist)
