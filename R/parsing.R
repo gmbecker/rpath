@@ -1,7 +1,6 @@
-
+op_regex = '([^\\[!=&\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&|<={0,1}|>={0,1})([^\\[!=&<>]+|\\([^\\)]+\\))'
 makeParsers = function(state, ...)
 {
-    
     
     parsers <- list(
         '^//$' = function(match, index, state)
@@ -37,9 +36,10 @@ makeParsers = function(state, ...)
         rpath_step("node", match)
     },
         #XXX I think these are going to cause problems with complicated paths like /a[b[c==5]/d == 6]
-        '^([^\\[!=&\\(\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&)([^\\[!=&\\|\\(]+|\\([^\\)]+\\))$' = function(match, index, state)
+        #'^([^\\[!=&\\(\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&)([^\\[!=&\\|\\(]+|\\([^\\)]+\\))$' = function(match, index, state)
+        op_regex = function(match, index, state)
     {
-        op = gsub( '([^\\[!=&\\|]+|\\([^\\)]+\\))(==|!=|\\|\\||&&)([^\\[!=&]+|\\([^\\)]+\\))', "\\2", match)
+        op = gsub( op_regex, "\\2", match)
         tmp = gsub(op, paste0("_=-_", op, "_=-_"), match, fixed=TRUE)
         sides = strsplit(tmp, split = paste0("_=-_", op, "_=-_"), fixed = TRUE)[[1]]
         #op = gsub(".*(==|!=|\\|\\||&&).*", "\\1", match)
@@ -53,15 +53,9 @@ makeParsers = function(state, ...)
         node = gsub(op, "", match,fixed = TRUE)
         list(rpath_step("operator", op), rpath_parse(node, state = new.env()))
  #       list(list("operator", op), rpath_parse(node, state = new.env()))
-    }#,
-        
-        
-  #      '(==|!=|!|\\|\\||&&)' = function(match, index = length(result) + 1, state)
-  #  {
-#        state$result[[index]] <- lsist("operator", match)
-   #     list("operator", match)
-   # }
-        )
+    })
+    #annoying but need this to get the op parser to have the right name in the list
+    names(parsers)[names(parsers)=="op_regex"] = op_regex
     args = list(...)
     parsers[names(args)] = args
     parsers

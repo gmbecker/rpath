@@ -1,7 +1,9 @@
 
 
-rpath_compare = function(lNode, rNode)
+rpath_compare = function(lNode, rNode, op = "==")
 {
+    if(is.character(op))
+        op = get(op, mode = "function")
     #what should we be returning in this case? it should probably never be happening anyway ...
  #   if(no_match(lNode) && no_match(rNode))
   #      return(TRUE)
@@ -57,7 +59,7 @@ rpath_compare = function(lNode, rNode)
              #   if(lNode[[li]] == rNode[[ri]])
          #       if(do_compare(lNode[[li]], rNode[[ri]], const_type))
           #          ret = TRUE
-                tmp = c(tmp, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type))
+                tmp = c(tmp, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type, op))
            
                 #ret = c(ret, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type))
             }
@@ -69,15 +71,15 @@ rpath_compare = function(lNode, rNode)
                                         # if(lNode[[li]] == rNode)
  #           if(do_compare(lNode[[li]], rNode, const_type))
   #              ret = TRUE
-            ret = c(ret, do_compare(lNode[[li]]@value, rNode, const_type))
+            ret = c(ret, do_compare(lNode[[li]]@value, rNode, const_type, op))
         }
     } else {
-        ret = do_compare(lNode, rNode, const_type)
+        ret = do_compare(lNode, rNode, const_type, op)
     }
     ret
 }
 
-do_compare = function(l, r, force_type = NULL)
+do_compare = function(l, r, force_type = NULL, op)
 {
     if(!is.null(force_type))
     {
@@ -89,7 +91,7 @@ do_compare = function(l, r, force_type = NULL)
             return(FALSE)
     }
 
-    l == r
+    op(l, r) # l == r
 }
 
 

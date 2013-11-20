@@ -194,6 +194,23 @@ executors <- list(
         !rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
                       rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors))
     },
+    lt = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors), "<")
+    },
+    lteq = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors), "<=")
+    },
+    gt = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors), ">")
+    },
+    gteq = function(robj, operands, executors, state, exist) {
+        rpath_compare(rpath_exec(robj, operands@payload[[1]], exist = FALSE, state = state, executors = executors),
+                      rpath_exec(robj, operands@payload[[2]], exist = FALSE, state = state, executors = executors), ">=")
+    },
+
     or = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) || rpath_exec(robj, operands@payload[[2]], exist = TRUE, executors = executors, state = state),
     and = function(robj, operands, executors, state, exist) rpath_exec(robj, operands@payload[[1]], exist = TRUE, executors = executors, state = state) && rpath_exec(robj, operands@payload[[2]], exist =  TRUE, executors = executors, state = state),
     string = function(robj, string, executors, state, exist) rpath_const("character", string@payload[[1]]),

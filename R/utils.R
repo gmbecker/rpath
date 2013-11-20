@@ -49,7 +49,11 @@ operators <- list(
     "==" = list(name = "eq", operand =2),
     "!=" = list(name = "noteq", operand = 2),
     "&&" = list(name = "and", operand = 2),
-    "||" = list(name = "or", operand = 2)
+    "||" = list(name = "or", operand = 2),
+    "<" = list(name = "lt", operand = 2),
+    "<=" = list(name = "lteq", operand = 2),
+    ">" = list(name = "gt", operand = 2),
+    ">=" = list(name = "gteq", operand = 2)
  )
 
 flatten = unlist
