@@ -1,0 +1,1 @@
+bibentry(bibtype="Manual", author = person(given = "Gabriel", family = "Becker", email="gmbecker@ucdavis.edu", role="aut"), title="rpath: XPath-based querying for R objects", year = 2013, url="https://github.com/gmbecker/rpath", note=paste0("R package version ", packageVersion("rpath")))

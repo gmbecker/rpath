@@ -2,7 +2,7 @@
 #source("R/no_return.R")
 library(rpath)
 options(error=recover)
-lst = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!")
+lst = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!")}
 
 rpath(lst, "/third")
 
@@ -51,6 +51,6 @@ rpath(lst3, "/third[@fourth=='6']", attr_fun = attrfun)
 rpath(lst3, "/third[!fourth]")
 rpath(lst3, "/third[!zzz]")
 rpath(lst3, "/third[zzz]")
-rpath(lst3, "/third[zzz||fourth=='6']") #not working
+rpath(lst3, "/third[zzz|fourth=='6']") #not working
 
 
