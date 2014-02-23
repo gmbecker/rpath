@@ -15,13 +15,22 @@ allnodes_exec = function(robj, node, exist, executors, state)
     {
         if(is(all, "rpath_matchList"))
             all = all[!sapply(all, checkTermCondition, term_fun = state$term_condition)]
-        #tmp = lapply(all, rpath_exec, step = node@payload[[1]], exist = FALSE, executors = executors, state = state)
         tmp = rpath_exec(all, node@payload[[1]], exist = FALSE, executors = executors, state = state)
-        #tmp = lapply(tmp, rpath_exec, step = rpath_step("node", "*"), exist = FALSE, executors = executors, state = state)
+        
+
+        if(length(node@payload) ==2 && node@payload[[2]]@type == "predicate")
+        {
+            found = rpath_exec(tmp, node@payload[[2]], exist = TRUE, executors = executors, state = state)
+            if(length(found))
+                tmp = tmp[found]
+            else
+                tmp = no_match_found()
+        }
+        
         
         tmp = combineMatchLists(lst = tmp)
-#        if(length(tmp) == 1)
- #           tmp = tmp[[1]]
+
+        
 
 
 

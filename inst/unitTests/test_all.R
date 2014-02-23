@@ -42,6 +42,18 @@ test_doubleslash = function()
       checkTrue(identical(res4, list(lst)), "Testing if a path beginning with // can find direct children of root")
   }
 
+#test //node[predicate] and //node in the presence of node$node nesting
+test_doubleslash_advanced = function()
+{
+    lst4 = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi", third = list(whaat=5, whooo=6)), sixth = "SO FUNNY!!!", third = list(fourth = 6, fifth = "yay!"), third = list(fourth=3, fifth=c("not6", special="heehee")))
+
+    res1 = rpath(lst4, "//fifth[@special]", attr_fun = attrfun)
+    checkTrue(identical(res1, list(c("not6", special="heehee"))), "Testing path with double-slash location including predicate '//fifth[@special]'")
+
+    res2 = rpath(lst4, "//third")
+    checkTrue(length(res2) == 4 && any(sapply(res2, function(x) identical(x, list(whaat = 5, whooo = 6)))), "Testing path with double-slash in the presence nesting '//third' with third$third present for one node")
+}
+
 test_dupnames = function()
 {
     lst = rep(list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = list("hi", seventh="lo")), sixth = "SO FUNNY!!!"), times = 2)
@@ -114,3 +126,6 @@ test_compound_and= function()
      res3 = rpath(lst3, "/third[fourth<='6'&&fifth=='hi']")
     checkTrue(identical(res2, list(list(fourth=5, fifth="hi"))), "Testing path with compound-or of two logical conditions /third[fourth=='6'|fifth=='hi']")
 }
+
+
+
