@@ -13,30 +13,18 @@ allnodes_exec = function(robj, node, exist, executors, state)
     cnt  =1
     while(!no_match(all) && cnt < 1000)
     {
+#is this causing problems when we try to have predicates on terminal nodes?
         if(is(all, "rpath_matchList"))
             all = all[!sapply(all, checkTermCondition, term_fun = state$term_condition)]
         tmp = rpath_exec(all, node@payload[[1]], exist = FALSE, executors = executors, state = state)
         
 
         if(length(node@payload) ==2 && node@payload[[2]]@type == "predicate")
-        {
-            found = rpath_exec(tmp, node@payload[[2]], exist = TRUE, executors = executors, state = state)
-            if(length(found))
-                tmp = tmp[found]
-            else
-                tmp = no_match_found()
-        }
-        
-        
+            tmp = rpath_exec(tmp, node@payload[[2]], exist = FALSE, executors = executors, state = state)
+               
         tmp = combineMatchLists(lst = tmp)
 
-        
-
-
-
-        if(!length(tmp))
-            tmp = no_match_found()
-        else
+        if(length(tmp) > 0)
             ret = c(ret, tmp)
 
         all = rpath_exec(all, rpath_step("node", "*"), exist = FALSE, executors = executors, state = state)
@@ -260,10 +248,8 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
         robj = robj@value
 
     
-#    if(step[[1]] == "predicate") {
     if(step@type == "predicate") {
         pred_type = step@payload[[1]]@type
-    #    if (is.vector(robj) && length(robj) > 1 && pred_type!= 'index') {
         if ( length(robj) > 1 && pred_type != 'index') {
             found = rpath_exec(robj, step@payload[[1]], exist = TRUE, executors = executors, state = state)
             if(exist)
@@ -280,9 +266,11 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
 
         } else {
             #exist=TRUE is hardcoded, we are checking for the predicate condition
-            found = rpath_exec(robj, step = step@payload, exist = TRUE, executors= executors, state = state)
+            found = rpath_exec(robj, step = step@payload[[1]], exist = TRUE, executors= executors, state = state)
             #if its a predicate, the matching element is robj (or no matc)h
-            if(!exist && found)
+            if(exist)
+                any(found)
+             else if(!exist && found)
                 res = robj
         }
     } else {
