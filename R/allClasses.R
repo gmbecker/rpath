@@ -54,16 +54,28 @@ no_match_found= function()
 }
 
 
-setClass("rpath_step", representation = list(type = "character", payload = "list", index = "numeric"))
+setClass("rpath_step", representation = list(type = "character", payload = "list", index = "numeric", namespace = "character"))
 
 rpath_step = function(type, payload, index = numeric())
 {
-    if(type == "node" && is(payload, "character") && grepl("^@", payload))
-    {
-        type = "attribute"
-        payload = gsub("@", "", payload)
-    }
+    namespace = ""
+    if(type == "node" && is(payload, "character")) {
+        if(grepl("^@", payload)) {
+            type = "attribute"
+            payload = gsub("@", "", payload)
+            if(grepl("~", payload, fixed=TRUE)) {
+                tmp = strsplit(payload, "~")[[1]]# list of length 1, [[1]] gives us the answers
+                namespace = tmp[1]
+                payload = tmp[2]
+            }
+        } else if (grepl(":", payload, fixed=TRUE)) {
+            tmp = strsplit(payload, ":")[[1]] # list of length 1, [[1]] gives us the answers
+            namespace = tmp[1]
+            payload = tmp[2]
+        }
+    } 
+            
     if(!is(payload, "list"))
         payload = list(payload)
-    new("rpath_step", type = type, payload = payload, index = index)
+    new("rpath_step", type = type, payload = payload, index = index, namespace = namespace)
 }

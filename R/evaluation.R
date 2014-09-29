@@ -37,13 +37,11 @@ allnodes_exec = function(robj, node, exist, executors, state)
         ret
 }
 
-
 node_exec = function(robj, node, exist, executors, state)
 {
      if(is(node, "rpath_step") && length(node@index))
         {
             index = node@index
-           # node = node[-2] #will the index always be in the second spot? I think so...
         } else {
             index = NULL
         }
@@ -54,7 +52,6 @@ node_exec = function(robj, node, exist, executors, state)
          return(rpath_matchList(matches = res))
      }
      pload = node@payload[[1]]
-#    node = unlist(node, recursive = FALSE)
     if(is.character(pload) && identical(pload, ""))
         if(!exist)
             return(robj)
@@ -69,36 +66,34 @@ node_exec = function(robj, node, exist, executors, state)
             ret = combineMatchLists(lst= res, trim = TRUE)
         else
             ret = simplify2array(res) #a logical vector should come out...
-#    } else if (is.list(node) && length(node) > 1) {
-                                        #XXX when does this code ever get invoked???
- #       print("I'm in the weird place")
-  #      browser()
-   #     res = robj
-    #    for(i in seq(1, length(node), by=2)) {
-     #       res = rpath_exec(res, node[i + 0:1], exist, executors = executors, state = state)
-      #  }
-       # ret = res
     }  else  {
         tcond = state$term_condition
+        if (nchar(node@namespace))
+            nms = state$nsFuncs[[node@namespace]](robj)
+        else
+            nms = state$defaultNSFunc(robj)
+        ## XXX Bug here!!! names(lst) can be NULL when length(lst)>0!!!
+        ## untested fix in nm namespace function. won't work if length(robj) doesn't do something reasonable.
         if(identical(pload, "*"))
         {
-            found = seq(along = state$names_fun(robj))
+            found = seq(along = nms)
             if(exist)
                 ret = TRUE
             else
             {
                 arr = new("rpath_matchList")
-                for(i in seq(along=state$names_fun(robj)))
+#                for(i in seq(along=state$names_fun(robj)))
+                for(i in seq(along = nms))
                     arr@matches = c(arr@matches, rpath_match(robj[[i]], tcond))
                 ret = arr
             }
-        } else if (pload %in% state$names_fun(robj)) {
+        } else if (pload %in% nms) {
             if(exist)
                 ret = TRUE
             else
             {
 
-                found = which(pload == state$names_fun(robj))
+                found = which(pload == nms)
                 if(length(found) == 1)
                     ret = rpath_match(robj[[found]], tcond)
                 else
@@ -145,7 +140,11 @@ attribute_exec = function(robj, step, executors, state, exist)
         ret = FALSE
     else
         ret = no_match_found()
-    ats = call_attr_fun(robj, state$attr_fun)
+    if(nchar(step@namepace))
+        attr_fun = state$asFuncs[[step@namespace]]
+    else
+        attr_fun = state$defaultASFunc
+    ats = call_attr_fun(robj, attr_fun)
     if(step@payload[[1]] %in% names(ats))
     {
         if(exist)

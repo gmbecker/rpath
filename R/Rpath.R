@@ -95,14 +95,36 @@ do_compare = function(l, r, force_type = NULL, op)
 }
 
 
+##' Rpath 'language spec'
+##' 
+##' "namespace" indicates how to resolve names, e.g. cl:numeric means elements with (first) class "numeric" match, nm:hi means elements with name (as returned by names() ) "hi" match.
+##' default, namespaceless node 'name' resolution is controlled by names_fun
+##' Attributes (@) are controlled by the "attributespace", indicated by '~', i.e. nodename@ar~dim would resolve via attrib, while nodename@sl~data would resolve as an S4 slot.
+##' default, attributespaceless attributes resolution is controlled by attr_fun
+##' predicates are indicated via [] as in XPath, they can be indexes (including support for vectors of indexs via nodename[x:y] ), rpath expressions, or logical operations
+##' equality in predicates uses "==", as in R
+##' Axes other than / and // (eg parent, ancestor) are not supported, as most R objects are unable to point to their parent object
+##' Wildcard (matches everything) is indicated by '*', as in /numeric/* will return all elements of the vector
+##' The 'and' and 'or' operators are indicated by & and | respectively, as in their vectorized forms in R
+##' Terminal nodes are recognized via the term_condition argument. This is necessary because in R, you can infinitely subset a vector of length one via v[1][1][1] etc.
+##' @param robj Object to match against
+##' @param path A character value containing the rpath expression
+##' @param state an environment, used internally to track state
+##' @param use_classes logical. Should class be the default node-name resolution? Defaults to false.
+##' @param names_fun 
 
-rpath = function(robj, path, state = new.env(), use_classes = FALSE, names_fun = if(use_classes) getClassesVec else names, term_condition = list_termination, attr_fun = attributes)
+rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFuncs, term_condition = list_termination, default_as="a", as_funcs = asFuncs)
 {
     state$lastSteps = list()
     state$result = list()
-    state$names_fun = names_fun
+#    state$names_fun = names_fun
+    state$nsFuncs = ns_funcs
+    state$defaultNSFunc = ns_funcs[[default_ns]]
+    state$asFuncs = as_funcs
+    state$defaultASFunc = as_funcs[[default_as]]
+    
     state$term_condition = term_condition
-    state$attr_fun = attr_fun
+#    state$attr_fun = attr_fun
     if(is.null(robj) || !is(path, "character") || !nchar(path))
         return(list())
 

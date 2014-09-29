@@ -6,12 +6,9 @@ makeParsers = function(state, ...)
         '^//$' = function(match, index, state)
     {
         rpath_step("allnodes", "")
-#        list("allnodes", "")
     },
         '^("|\')([^"]*?)\\1$' = function(match, index = length(state$result) + 1, state)
     {
-#        state$result[[index]] <- list("string", match)
-#        list("string", match)
         match = gsub("(^('|\")|('|\")$)", "", match)
         rpath_step("string", match)
     },
@@ -19,7 +16,8 @@ makeParsers = function(state, ...)
     {
         match = gsub("@", "", match, fixed= TRUE)
         rpath_step("attribute", match)
-     },
+    },
+        
         '(/[^=[:space:]!]*)' = function(match, index = length(state$result) + 1, state)
     {
         if (match == ".")
