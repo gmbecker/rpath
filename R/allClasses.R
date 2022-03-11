@@ -1,16 +1,17 @@
 
-setClass("rpath_match", representation(value = "ANY"))
+setClass("rpath_match", representation(value = "ANY",
+                                       indices = "integer"))
 
-rpath_match = function(value, term_condition = NULL)
+rpath_match = function(value, term_condition = NULL, indices = integer())
 {
     if(is(value, "rpath_match"))
         value
     else
     {
         if(!is.null(term_condition) && term_condition(value))
-            new("terminal_node", value = value)
+            new("terminal_node", value = value, indices = indices)
         else
-            new("rpath_match", value = value)
+            new("rpath_match", value = value, indices = indices)
     }
 }
 
@@ -19,11 +20,11 @@ setClass("rpath_constant", representation = list(type="character"), contains = "
 rpath_const = function(type, value)
 {
     if(!is(value, type))
-        stop("constant value ", value, "does not match declared type ", type) 
+        stop("constant value ", value, "does not match declared type ", type)
     new("rpath_constant", type = type, value = value)
 }
 
-setClass("rpath_matchList", representation(matches = "list"), validity = function(object) all(sapply(object@matches, function(x) is(x, "rpath_match"))))
+setClass("rpath_matchList", representation(matches = "list", indices = "integer"), validity = function(object) all(sapply(object@matches, function(x) is(x, "rpath_match"))))
 
 setAs("list", "rpath_matchList", function(from) new("rpath_matchList", matches = from))
 
@@ -73,8 +74,8 @@ rpath_step = function(type, payload, index = numeric())
             namespace = tmp[1]
             payload = tmp[2]
         }
-    } 
-            
+    }
+
     if(!is(payload, "list"))
         payload = list(payload)
     new("rpath_step", type = type, payload = payload, index = index, namespace = namespace)

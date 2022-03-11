@@ -17,11 +17,11 @@ allnodes_exec = function(robj, node, exist, executors, state)
         if(is(all, "rpath_matchList"))
             all = all[!sapply(all, checkTermCondition, term_fun = state$term_condition)]
         tmp = rpath_exec(all, node@payload[[1]], exist = FALSE, executors = executors, state = state)
-        
+
 
         if(length(node@payload) ==2 && node@payload[[2]]@type == "predicate")
             tmp = rpath_exec(tmp, node@payload[[2]], exist = FALSE, executors = executors, state = state)
-               
+
         tmp = combineMatchLists(lst = tmp)
 
         if(length(tmp) > 0)
@@ -85,6 +85,7 @@ node_exec = function(robj, node, exist, executors, state)
 #                for(i in seq(along=state$names_fun(robj)))
                 for(i in seq(along = nms))
                     arr@matches = c(arr@matches, rpath_match(robj[[i]], tcond))
+                arr@indices = seq_along(nms)
                 ret = arr
             }
         } else if (pload %in% nms) {
@@ -118,7 +119,7 @@ node_exec = function(robj, node, exist, executors, state)
      {
          if(is(ret, "rpath_match"))
              ret = as(list(ret), "rpath_matchList")
-         
+
          if(!exist)
          {
              if(any(index > length(ret@matches)))
@@ -140,7 +141,7 @@ attribute_exec = function(robj, step, executors, state, exist)
         ret = FALSE
     else
         ret = no_match_found()
-    if(nchar(step@namepace))
+    if(nchar(step@namespace))
         attr_fun = state$asFuncs[[step@namespace]]
     else
         attr_fun = state$defaultASFunc
@@ -242,11 +243,11 @@ rpath_exec <- function(robj, step, exist=FALSE, executors = executors, state)
             res = combineMatchLists(lst = res, trim = TRUE)
         return(res)
     }
-    
+
     if(is(robj, "rpath_match"))
         robj = robj@value
 
-    
+
     if(step@type == "predicate") {
         pred_type = step@payload[[1]]@type
         if ( length(robj) > 1 && pred_type != 'index') {

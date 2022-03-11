@@ -16,7 +16,7 @@ rpath_compare = function(lNode, rNode, op = "==")
     const_type = NULL
     llst = FALSE
     rlst = FALSE
-    
+
     if(is(lNode, "rpath_constant") )
     {
         const_type = lNode@type
@@ -28,7 +28,7 @@ rpath_compare = function(lNode, rNode, op = "==")
         lNode = lNode@matches
         llst = TRUE
     }
-    
+
     if(is(rNode, "rpath_constant") )
     {
         const_type = rNode@type
@@ -39,8 +39,8 @@ rpath_compare = function(lNode, rNode, op = "==")
         rNode = rNode@matches
         rlst = TRUE
     }
-    
-      
+
+
     if(rlst && !llst)
     {
         llst = TRUE
@@ -52,7 +52,7 @@ rpath_compare = function(lNode, rNode, op = "==")
 
     if(rlst && llst)
     {
-       
+
         for(li in seq(length(lNode), 1, by=-1)){
             tmp = logical()
             for(ri in seq(length(rNode), 1, by=-1)){
@@ -60,7 +60,7 @@ rpath_compare = function(lNode, rNode, op = "==")
          #       if(do_compare(lNode[[li]], rNode[[ri]], const_type))
           #          ret = TRUE
                 tmp = c(tmp, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type, op))
-           
+
                 #ret = c(ret, do_compare(lNode[[li]]@value, rNode[[ri]]@value, const_type))
             }
             #XXXdo we want any or all here???
@@ -96,7 +96,7 @@ do_compare = function(l, r, force_type = NULL, op)
 
 
 ##' Rpath 'language spec'
-##' 
+##'
 ##' "namespace" indicates how to resolve names, e.g. cl:numeric means elements with (first) class "numeric" match, nm:hi means elements with name (as returned by names() ) "hi" match.
 ##' default, namespaceless node 'name' resolution is controlled by names_fun
 ##' Attributes (@) are controlled by the "attributespace", indicated by '~', i.e. nodename@ar~dim would resolve via attrib, while nodename@sl~data would resolve as an S4 slot.
@@ -110,8 +110,11 @@ do_compare = function(l, r, force_type = NULL, op)
 ##' @param robj Object to match against
 ##' @param path A character value containing the rpath expression
 ##' @param state an environment, used internally to track state
-##' @param use_classes logical. Should class be the default node-name resolution? Defaults to false.
-##' @param names_fun 
+##' @param default_ns Namespace to use when no-namespace is specified. Defaults to \code{nm} for names.
+##' @param term_condition function. Function returning true if maximum depth has been reached (ie no more recursion should be done).
+##' @param default_as character. Attribute space to use when none is specified. Defaults to \code{a} indicating R attributes.
+##' @param as_funcs list. Named list of functions to resolve path attributes of different types (ie different attribute spaces).
+##' @export
 
 rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFuncs, term_condition = list_termination, default_as="a", as_funcs = asFuncs)
 {
@@ -120,9 +123,11 @@ rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFu
 #    state$names_fun = names_fun
     state$nsFuncs = ns_funcs
     state$defaultNSFunc = ns_funcs[[default_ns]]
+    if(is(as_funcs, "function"))
+        as_funcs = list(a = as_funcs)
     state$asFuncs = as_funcs
     state$defaultASFunc = as_funcs[[default_as]]
-    
+
     state$term_condition = term_condition
 #    state$attr_fun = attr_fun
     if(is.null(robj) || !is(path, "character") || !nchar(path))
@@ -132,7 +137,7 @@ rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFu
         return(robj)
 
     steps = rpath_split(path, state =  state)
-         
+
     res = rpath_exec(robj, steps[[1]], executors = executors, state = state)
     #i = 3
     i = 2
@@ -150,7 +155,7 @@ rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFu
     } else if (is(res, "rpath_match")) {
         res = list(res@value)
     }
-    
+
     res
 }
 
