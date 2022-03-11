@@ -26,12 +26,31 @@ rpath_const = function(type, value)
 
 setClass("rpath_matchList", representation(matches = "list", indices = "integer"), validity = function(object) all(sapply(object@matches, function(x) is(x, "rpath_match"))))
 
+
+rpath_matchList <- function(matches = list(), indices = integer()) {
+    new("rpath_matchList", matches = matches, indices = indices)
+}
+
+#' @name as.list.rpath_matchList
+#' @title conversion Methods for rpath_matchList
+#'
+#' These are an internal detail which should not be relevant to end users
+#' @param from Object being converted.
+#' @param x Object being converted.
+#'
+#' @return a list, or an rpath_matchList object, depending on direction of the coercion.
+#' @export
+#' @rdname listconv
 setAs("list", "rpath_matchList", function(from) new("rpath_matchList", matches = from))
 
+#' @rdname listconv
+#'
 setAs("rpath_matchList", "list", function(from) from@matches)
 
 #this should be entirely unnecessary but it isn't....for "reasons" (lapply calls as.list directly)
-as.list.rpath_matchList = function(from) as(from, "list")
+#' @export
+#' @rdname listconv
+as.list.rpath_matchList = function(x) as(x, "list")
 
 
 

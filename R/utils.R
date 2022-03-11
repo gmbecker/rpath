@@ -40,7 +40,7 @@ regroup = function(tokens)
             i = i + 1
         }
     }
-    
+
     tokens
 }
 
@@ -56,7 +56,6 @@ operators <- list(
     ">=" = list(name = "gteq", operand = 2)
  )
 
-flatten = unlist
 
 compact  = function(lst)
 {
@@ -70,11 +69,11 @@ combineMatchLists = function(..., lst, trim = TRUE)
 
     if(is(lst, "rpath_match"))
         lst = list(lst)
-    
+
     if(is(lst, "rpath_matchList"))
         res = lst
     else {
-    
+
         ret = list()
         for(tmp in lst)
         {
@@ -86,7 +85,7 @@ combineMatchLists = function(..., lst, trim = TRUE)
                     ret = c(ret, tmp)
             }
         }
-        
+
         res = new("rpath_matchList", matches = ret)
     }
     if(trim)
@@ -117,8 +116,8 @@ no_match = function(obj)
     {
         if(is(obj, "rpath_matchList"))
         {
-            
-            ( !length(obj@matches) || all(sapply(obj@matches, no_match) ) ) 
+
+            ( !length(obj@matches) || all(sapply(obj@matches, no_match) ) )
         } else {
             is(obj, "no_match")
         }

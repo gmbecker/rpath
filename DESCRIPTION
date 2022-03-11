@@ -1,9 +1,9 @@
 Package: rpath
-Version: 0.1-0
+Version: 0.1-1
 Title: XPath-based querying for R objects
 Description: Facilities for querying and selecting elements from R objects using an XPath like syntax. Adapted from the jpath JavaScript project
 Author: Gabriel Becker, adapted from jpath code by Artur Burtsev
 Depends: methods
-Suggests:  RUnit 
-Maintainer: Gabriel Becker <gmbecker@ucdavis.edu>
+Maintainer: Gabriel Becker <gabembecker@gmail.com>
 License: GPL
+RoxygenNote: 7.1.2

@@ -1,4 +1,4 @@
-
+#' @import methods
 
 rpath_compare = function(lNode, rNode, op = "==")
 {
@@ -112,9 +112,42 @@ do_compare = function(l, r, force_type = NULL, op)
 ##' @param state an environment, used internally to track state
 ##' @param default_ns Namespace to use when no-namespace is specified. Defaults to \code{nm} for names.
 ##' @param term_condition function. Function returning true if maximum depth has been reached (ie no more recursion should be done).
-##' @param default_as character. Attribute space to use when none is specified. Defaults to \code{a} indicating R attributes.
-##' @param as_funcs list. Named list of functions to resolve path attributes of different types (ie different attribute spaces).
+##' @param default_as character. Attribute space to use when none is specified. Defaults to the name of the first element in \code{as_funcs} (which defaults to \code{a} indicating R attributes when \code{as_funcs} is not specified). .
+##' @param as_funcs list. Named list of functions to resolve path attributes of different types (ie different attribute spaces). Defaults to standard R attributes, namespaced as "a".
 ##' @export
+##' @examples
+##'
+##' lst = list(first = TRUE, second = FALSE, third = list(fourth = 5, fifth = "hi"), sixth = "SO FUNNY!!!")
+##'
+##' rpath(lst, "/third")
+##'
+##' rpath(lst, "/third/fourth")
+##'
+##' rpath(lst, "/*[fourth]")
+##' rpath(lst, "/*")
+##' rpath(lst, "/third/*")
+##'
+##' rpath(lst, "/third[fourth]")
+##'
+##' rpath(lst, "/cl:logical")
+##' rpath(lst, "/cl:list")
+##' rpath(lst, "/cl:list/cl:character")
+##'
+##' rpath(lst, "//fourth")
+##' rpath(lst, "/*/fourth")
+##' rpath(lst, "//third")
+##'
+##' rpath(lst, "//cl:logical")
+##' rpath(lst, "//cl:character")
+##'
+##' lst2 = c(lst, lst)
+##'
+##' rpath(lst2, "/third")
+##' rpath(lst2, "/third/fourth")
+##'
+##' rpath(lst2, "/third[1]/fourth")
+##'
+##' rpath(lst2, "/third[1]")
 
 rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFuncs, term_condition = list_termination, default_as=names(as_funcs)[1], as_funcs = asFuncs)
 {
