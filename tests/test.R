@@ -114,10 +114,12 @@ stopifnot(identical(rpath(lst3, "/third/*[@class=='character']", as_funcs = list
 stopifnot(identical(rpath(lst3, "/third[@fourth!='6']", as_funcs = list(a=attrfun)),
                     rpath(lst3, "/third[fourth!='6']")))
 
-## doesn't work
-## stopifnot(identical(rpath(lst3, "/third[@fourth=='6']", as_funcs = list(as=attrfun)),
-##                     rpath(lst3, "/third[fourth=='6']")))
 
+stopifnot(identical(rpath(lst3, "/third[@fourth=='6']", as_funcs = list(as=attrfun)),
+                    rpath(lst3, "/third[fourth=='6']")))
+
+stopifnot(identical(rpath(lst3, "/third[@as~fourth=='6']", as_funcs = list(as=attrfun)),
+                    rpath(lst3, "/third[fourth=='6']")))
 
 stopifnot(identical(rpath(lst3, "/third[!fourth]"),
                     list()))

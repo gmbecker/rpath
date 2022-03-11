@@ -63,14 +63,17 @@ rpath_step = function(type, payload, index = numeric())
     if(type == "node" && is(payload, "character")) {
         if(grepl("^@", payload)) {
             type = "attribute"
-            payload = gsub("@", "", payload)
-            if(grepl("~", payload, fixed=TRUE)) {
-                tmp = strsplit(payload, "~")[[1]]# list of length 1, [[1]] gives us the answers
-                namespace = tmp[1]
-                payload = tmp[2]
-            }
         } else if (grepl(":", payload, fixed=TRUE)) {
             tmp = strsplit(payload, ":")[[1]] # list of length 1, [[1]] gives us the answers
+            namespace = tmp[1]
+            payload = tmp[2]
+        }
+    }
+
+    if(type == "attribute" && is(payload, "character")) {
+        payload = gsub("@", "", payload)
+        if(grepl("~", payload, fixed=TRUE)) {
+            tmp = strsplit(payload, "~")[[1]]# list of length 1, [[1]] gives us the answers
             namespace = tmp[1]
             payload = tmp[2]
         }

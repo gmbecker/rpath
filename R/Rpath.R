@@ -116,7 +116,7 @@ do_compare = function(l, r, force_type = NULL, op)
 ##' @param as_funcs list. Named list of functions to resolve path attributes of different types (ie different attribute spaces).
 ##' @export
 
-rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFuncs, term_condition = list_termination, default_as="a", as_funcs = asFuncs)
+rpath = function(robj, path, state = new.env(), default_ns="nm", ns_funcs = nsFuncs, term_condition = list_termination, default_as=names(as_funcs)[1], as_funcs = asFuncs)
 {
     state$lastSteps = list()
     state$result = list()

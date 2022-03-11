@@ -141,9 +141,11 @@ attribute_exec = function(robj, step, executors, state, exist)
         ret = FALSE
     else
         ret = no_match_found()
+    attr_fun = NULL
     if(nchar(step@namespace))
         attr_fun = state$asFuncs[[step@namespace]]
-    else
+
+    if(is.null(attr_fun))
         attr_fun = state$defaultASFunc
     ats = call_attr_fun(robj, attr_fun)
     if(step@payload[[1]] %in% names(ats))
